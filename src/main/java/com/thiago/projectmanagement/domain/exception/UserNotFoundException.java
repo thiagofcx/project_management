@@ -5,15 +5,13 @@ import lombok.Getter;
 @Getter
 public class UserNotFoundException extends RuntimeException {
 	
-	private String errorCode;
+	private String errorCode = "USER_NOT_FOUND";
 	
 	public UserNotFoundException() {
         super("User already exists");
-        this.errorCode = "USER_NOT_FOUND";
     }
 	
     public UserNotFoundException(String message) {
         super(message);
-        this.errorCode = "USER_NOT_FOUND";
     }
 }

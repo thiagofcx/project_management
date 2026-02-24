@@ -5,15 +5,13 @@ import lombok.Getter;
 @Getter
 public class InvalidCredentialsException extends RuntimeException {
 	
-	private String errorCode;
+	private String errorCode = "INVALID_CREDENTIALS";
 	
 	public InvalidCredentialsException() {
         super("Invalid credentials");
-        this.errorCode = "INVALID_CREDENTIALS";
     }
 	
     public InvalidCredentialsException(String message) {
         super(message);
-        this.errorCode = "INVALID_CREDENTIALS";
     }
 }

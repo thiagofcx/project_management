@@ -13,8 +13,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
 
 import com.thiago.projectmanagement.application.dto.PagedResultDTO;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import com.thiago.projectmanagement.application.dto.UserInputDTO;
 import com.thiago.projectmanagement.application.dto.UserOutputDTO;
 import com.thiago.projectmanagement.application.usecase.CreateUserUseCase;
@@ -33,6 +37,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "*")
+@Validated
 public class UserController {
 
     private final CreateUserUseCase createUserUseCase;
@@ -84,8 +89,8 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<PagedResultDTO<UserOutputDTO>> list(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return ResponseEntity.ok(listUsersUseCase.execute(page, size));
     }
 

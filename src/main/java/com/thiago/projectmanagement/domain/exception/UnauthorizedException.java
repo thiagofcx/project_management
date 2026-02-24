@@ -5,15 +5,13 @@ import lombok.Getter;
 @Getter
 public class UnauthorizedException extends RuntimeException {
 	
-	private String errorCode;
+	private String errorCode= "UNAUTHORIZED";
 	
 	public UnauthorizedException() {
         super("You do not have permission to access this resource");
-        this.errorCode = "UNAUTHORIZED";
     }
 	
     public UnauthorizedException(String message) {
         super(message);
-        this.errorCode = "UNAUTHORIZED";
     }
 }
