@@ -2,6 +2,7 @@ package com.thiago.projectmanagement.presentation.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,6 +54,7 @@ public class ProjectController {
         this.deleteProjectUseCase = deleteProjectUseCase;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
     public ResponseEntity<ProjectOutputDTO> create(@Valid @RequestBody CreateProjectRequest request) {
         ProjectStatus status = parseStatus(request.getStatus());
@@ -67,6 +69,7 @@ public class ProjectController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping
     public ResponseEntity<PagedResultDTO<ProjectOutputDTO>> list(
             @RequestParam(defaultValue = "0") @Min(0) int page,
@@ -79,11 +82,13 @@ public class ProjectController {
         return ResponseEntity.ok(listProjectsUseCase.execute(page, size, sortBy, sortOrder, name, projectStatus));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/{id}")
     public ResponseEntity<ProjectOutputDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(getProjectByIdUseCase.execute(id));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PutMapping("/{id}")
     public ResponseEntity<ProjectOutputDTO> update(
             @PathVariable @Min(1) Long id,
@@ -107,6 +112,7 @@ public class ProjectController {
         return ProjectStatus.valueOf(value);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         deleteProjectUseCase.execute(id);

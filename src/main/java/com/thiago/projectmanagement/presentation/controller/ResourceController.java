@@ -2,6 +2,7 @@ package com.thiago.projectmanagement.presentation.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,6 +54,7 @@ public class ResourceController {
         this.deleteResourceUseCase = deleteResourceUseCase;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
     public ResponseEntity<ResourceOutputDTO> create(@Valid @RequestBody CreateResourceRequest request) {
         ResourceInputDTO input = new ResourceInputDTO(
@@ -64,6 +66,7 @@ public class ResourceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping
     public ResponseEntity<PagedResultDTO<ResourceOutputDTO>> list(
             @RequestParam(defaultValue = "0") @Min(0) int page,
@@ -75,11 +78,13 @@ public class ResourceController {
         return ResponseEntity.ok(listResourcesUseCase.execute(page, size, sortBy, sortOrder, name, skills));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/{id}")
     public ResponseEntity<ResourceOutputDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(getResourceByIdUseCase.execute(id));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PutMapping("/{id}")
     public ResponseEntity<ResourceOutputDTO> update(
             @PathVariable Long id,
@@ -93,6 +98,7 @@ public class ResourceController {
         return ResponseEntity.ok(result);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         deleteResourceUseCase.execute(id);

@@ -2,6 +2,7 @@ package com.thiago.projectmanagement.presentation.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,6 +54,7 @@ public class AllocationController {
         this.deleteAllocationUseCase = deleteAllocationUseCase;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
     public ResponseEntity<AllocationOutputDTO> create(@Valid @RequestBody CreateAllocationRequest request) {
         AllocationInputDTO input = AllocationInputDTO.builder()
@@ -63,6 +65,7 @@ public class AllocationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping
     public ResponseEntity<PagedResultDTO<AllocationOutputDTO>> list(
             @RequestParam(defaultValue = "0") @Min(0) int page,
@@ -74,11 +77,13 @@ public class AllocationController {
         return ResponseEntity.ok(listAllocationsUseCase.execute(page, size, sortBy, sortOrder, resourceName, projectName));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/{id}")
     public ResponseEntity<AllocationOutputDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(getAllocationByIdUseCase.execute(id));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PutMapping("/{id}")
     public ResponseEntity<AllocationOutputDTO> update(
             @PathVariable Long id,
@@ -91,6 +96,7 @@ public class AllocationController {
         return ResponseEntity.ok(result);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         deleteAllocationUseCase.execute(id);

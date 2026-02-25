@@ -3,6 +3,7 @@ package com.thiago.projectmanagement.presentation.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,6 +64,7 @@ public class UserController {
         this.jwtService = jwtService;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<UserOutputDTO> create(
             @Valid @RequestBody CreateUserRequest request,
@@ -85,6 +87,7 @@ public class UserController {
         return ResponseEntity.ok(getCurrentUserUseCase.execute(userId));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<PagedResultDTO<UserOutputDTO>> list(
             @RequestParam(defaultValue = "0") @Min(0) int page,
@@ -92,11 +95,13 @@ public class UserController {
         return ResponseEntity.ok(listUsersUseCase.execute(page, size));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserOutputDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(getUserByIdUseCase.execute(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<UserOutputDTO> update(
             @PathVariable Long id,
@@ -113,6 +118,7 @@ public class UserController {
         return ResponseEntity.ok(result);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
