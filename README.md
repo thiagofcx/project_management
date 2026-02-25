@@ -4,9 +4,9 @@ API REST para gerenciamento de projetos, recursos (pessoas), alocações e usuá
 
 ## Tecnologias
 
-- **Java 21** · **Spring Boot 4** · **Spring Security** (JWT) · **Spring Data JPA**
-- **MySQL 8**
-- **Maven**
+- **Backend:** Java 21 · Spring Boot 4 · Spring Security (JWT) · Spring Data JPA · Maven
+- **Frontend:** Angular 21 (servido em produção via Nginx no Docker)
+- **Banco:** MySQL 8
 
 ## Pré-requisitos
 
@@ -47,27 +47,32 @@ export SECURITY_JWT_SECRET_KEY="sua-chave-secreta-aqui"
 export SECURITY_JWT_EXPIRATION=86400000
 ```
 
-| Variável | Descrição | Exemplo |
-|----------|-----------|--------|
-| `SPRING_DATASOURCE_URL` | JDBC URL do MySQL | `jdbc:mysql://db:3306/project_management?createDatabaseIfNotExist=true&serverTimezone=UTC` |
-| `SPRING_DATASOURCE_USERNAME` | Usuário do banco | `dev_user` |
-| `SPRING_DATASOURCE_PASSWORD` | Senha do banco | `dev_pass` |
-| `SECURITY_JWT_SECRET_KEY` | Chave para assinatura do JWT | String longa e aleatória |
-| `SECURITY_JWT_EXPIRATION` | Expiração do token (ms) | `86400000` (24h) |
+
+| Variável                     | Descrição                    | Exemplo                                                                                    |
+| ---------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------ |
+| `SPRING_DATASOURCE_URL`      | JDBC URL do MySQL            | `jdbc:mysql://db:3306/project_management?createDatabaseIfNotExist=true&serverTimezone=UTC` |
+| `SPRING_DATASOURCE_USERNAME` | Usuário do banco             | `dev_user`                                                                                 |
+| `SPRING_DATASOURCE_PASSWORD` | Senha do banco               | `dev_pass`                                                                                 |
+| `SECURITY_JWT_SECRET_KEY`    | Chave para assinatura do JWT | String longa e aleatória                                                                   |
+| `SECURITY_JWT_EXPIRATION`    | Expiração do token (ms)      | `86400000` (24h)                                                                           |
+
 
 ## Como rodar a aplicação
 
 ### Com Docker Compose (ambiente completo)
 
-Sobe MySQL e a API em containers. Exige Docker e Docker Compose.
+Sobe MySQL, a API e o frontend Angular em containers. Exige Docker e Docker Compose.
 
 ```bash
 # Na raiz do projeto
 docker compose up -d
 ```
 
-- **API:** http://localhost:8080  
+- **Frontend:** [http://localhost:4200](http://localhost:4200) (Angular servido por Nginx)
+- **API:** [http://localhost:8080](http://localhost:8080)  
 - **MySQL:** porta `3306` (host); usuário `dev_user`, senha `dev_pass`, banco `project_management`.
+
+O frontend em container consome a API em `http://localhost:8080`; as requisições partem do navegador, então acessar pelo mesmo host funciona normalmente.
 
 Parar os serviços:
 
@@ -79,6 +84,18 @@ Recriar a API após mudanças no código:
 
 ```bash
 docker compose up -d --build api
+```
+
+Recriar o frontend após mudanças no código Angular:
+
+```bash
+docker compose up -d --build frontend
+```
+
+Subir apenas o frontend (com API e banco já rodando):
+
+```bash
+docker compose up -d frontend
 ```
 
 ### Local (API na máquina, banco no Docker)
@@ -100,7 +117,7 @@ export SECURITY_JWT_EXPIRATION=86400000
 ./mvnw spring-boot:run
 ```
 
-A API ficará em http://localhost:8080.
+A API ficará em [http://localhost:8080](http://localhost:8080).
 
 ### Local (MySQL e API na máquina)
 
@@ -113,9 +130,8 @@ GRANT ALL ON project_management.* TO 'dev_user'@'%';
 FLUSH PRIVILEGES;
 ```
 
-2. Exporte as variáveis de ambiente (como na opção B acima) com `SPRING_DATASOURCE_URL` apontando para `127.0.0.1:3306`.
-
-3. Execute:
+1. Exporte as variáveis de ambiente (como na opção B acima) com `SPRING_DATASOURCE_URL` apontando para `127.0.0.1:3306`.
+2. Execute:
 
 ```bash
 ./mvnw spring-boot:run
@@ -128,19 +144,21 @@ FLUSH PRIVILEGES;
 
 ### Endpoints principais
 
-| Método | Path | Descrição |
-|--------|------|-----------|
-| `POST` | `/api/auth` | Login (email/senha) → retorna token |
-| `GET`  | `/api/dashboard/summary` | Resumo (projetos, recursos, alocações) |
-| `GET/POST` | `/api/projects` | Listar (com filtros/ordenação) e criar projeto |
-| `GET/PUT/DELETE` | `/api/projects/{id}` | Buscar, atualizar e excluir projeto |
-| `GET/POST` | `/api/resources` | Listar (com filtros/ordenação) e criar recurso |
-| `GET/PUT/DELETE` | `/api/resources/{id}` | Buscar, atualizar e excluir recurso |
-| `GET/POST` | `/api/allocations` | Listar (com filtros/ordenação) e criar alocação |
-| `GET/PUT/DELETE` | `/api/allocations/{id}` | Buscar, atualizar e excluir alocação |
-| `GET`  | `/api/users/me` | Usuário autenticado |
-| `GET/POST` | `/api/users` | Listar e criar usuário (admin) |
-| `GET/PUT/DELETE` | `/api/users/{id}` | Buscar, atualizar e excluir usuário |
+
+| Método           | Path                     | Descrição                                       |
+| ---------------- | ------------------------ | ----------------------------------------------- |
+| `POST`           | `/api/auth`              | Login (email/senha) → retorna token             |
+| `GET`            | `/api/dashboard/summary` | Resumo (projetos, recursos, alocações)          |
+| `GET/POST`       | `/api/projects`          | Listar (com filtros/ordenação) e criar projeto  |
+| `GET/PUT/DELETE` | `/api/projects/{id}`     | Buscar, atualizar e excluir projeto             |
+| `GET/POST`       | `/api/resources`         | Listar (com filtros/ordenação) e criar recurso  |
+| `GET/PUT/DELETE` | `/api/resources/{id}`    | Buscar, atualizar e excluir recurso             |
+| `GET/POST`       | `/api/allocations`       | Listar (com filtros/ordenação) e criar alocação |
+| `GET/PUT/DELETE` | `/api/allocations/{id}`  | Buscar, atualizar e excluir alocação            |
+| `GET`            | `/api/users/me`          | Usuário autenticado                             |
+| `GET/POST`       | `/api/users`             | Listar e criar usuário                          |
+| `GET/PUT/DELETE` | `/api/users/{id}`        | Buscar, atualizar e excluir usuário             |
+
 
 Respostas em **snake_case**. Listagens aceitam `page`, `size`, `sort_by`, `sort_order` e filtros opcionais (consulte a documentação da API ou o código dos controllers).
 
@@ -153,6 +171,13 @@ src/main/java/com/thiago/projectmanagement/
 ├── infrastructure/       # Persistência (JPA), segurança (JWT), config (CORS)
 └── presentation/         # Controllers, DTOs de request, exception handler
 ```
+
+## Acesso
+
+No script SQL (DB.sql) existe um usuário ADMIN default criado:
+
+email: [admin@example.com](mailto:admin@example.com)
+password: 123456
 
 ## Licença
 
