@@ -1,0 +1,956 @@
+openapi: 3.0.3
+info:
+  title: API de Gerenciamento de Projetos
+  description: |
+    API REST para gerenciamento de projetos, recursos (pessoas), alocações e usuários.
+    As respostas utilizam nomenclatura em **snake_case**.
+    Endpoints protegidos exigem o header `Authorization: Bearer <token>` (exceto autenticação).
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Servidor local
+
+tags:
+  - name: Autenticação
+    description: Login e token JWT
+  - name: Dashboard
+    description: Resumo para painel
+  - name: Projetos
+    description: CRUD de projetos
+  - name: Recursos
+    description: CRUD de recursos (pessoas)
+  - name: Alocações
+    description: CRUD de alocações (recurso ↔ projeto)
+  - name: Usuários
+    description: CRUD de usuários do sistema
+
+paths:
+  /api/auth:
+    post:
+      tags: [Autenticação]
+      summary: Autenticar
+      description: Retorna token JWT para uso nos demais endpoints.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Token e dados do usuário
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/dashboard/summary:
+    get:
+      tags: [Dashboard]
+      summary: Resumo do dashboard
+      description: Retorna totais de projetos, recursos, alocações e contagens por status.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Resumo do dashboard
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/projects:
+    get:
+      tags: [Projetos]
+      summary: Listar projetos
+      description: Lista paginada com filtros opcionais por nome e status, e ordenação.
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: size
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: sort_by
+          in: query
+          description: Campo para ordenação (id, name, description, startDate, endDate, status, createdAt)
+          schema: { type: string }
+        - name: sort_order
+          in: query
+          schema: { type: string, enum: [ASC, DESC], default: ASC }
+        - name: name
+          in: query
+          description: Filtro por nome (contém)
+          schema: { type: string }
+        - name: status
+          in: query
+          description: Filtro por status
+          schema: { type: string, enum: [PLANNING, IN_PROGRESS, ON_HOLD, COMPLETED] }
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Página de projetos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedProjects'
+        '400':
+          $ref: '#/components/responses/BadRequestValidation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags: [Projetos]
+      summary: Criar projeto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Projeto criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Dados inválidos ou datas inconsistentes
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ApiError'
+                  - $ref: '#/components/schemas/ApiValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/projects/{id}:
+    get:
+      tags: [Projetos]
+      summary: Buscar projeto por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Projeto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags: [Projetos]
+      summary: Atualizar projeto
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectRequest'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Projeto atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ApiError'
+                  - $ref: '#/components/schemas/ApiValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags: [Projetos]
+      summary: Excluir projeto
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Excluído com sucesso
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/resources:
+    get:
+      tags: [Recursos]
+      summary: Listar recursos
+      description: Lista paginada com filtros por nome e skills, e ordenação.
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: size
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: sort_by
+          in: query
+          description: Campo para ordenação (id, name, email, skills, createdAt)
+          schema: { type: string }
+        - name: sort_order
+          in: query
+          schema: { type: string, enum: [ASC, DESC], default: ASC }
+        - name: name
+          in: query
+          description: Filtro por nome
+          schema: { type: string }
+        - name: skills
+          in: query
+          description: Filtro por skills
+          schema: { type: string }
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Página de recursos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedResources'
+        '400':
+          $ref: '#/components/responses/BadRequestValidation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags: [Recursos]
+      summary: Criar recurso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateResourceRequest'
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Recurso criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '400':
+          description: Dados inválidos ou e-mail já cadastrado
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ApiError'
+                  - $ref: '#/components/schemas/ApiValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/resources/{id}:
+    get:
+      tags: [Recursos]
+      summary: Buscar recurso por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Recurso encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags: [Recursos]
+      summary: Atualizar recurso
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateResourceRequest'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Recurso atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '400':
+          description: Dados inválidos ou e-mail já cadastrado
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ApiError'
+                  - $ref: '#/components/schemas/ApiValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags: [Recursos]
+      summary: Excluir recurso
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Excluído com sucesso
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/allocations:
+    get:
+      tags: [Alocações]
+      summary: Listar alocações
+      description: Lista paginada com filtros por nome do recurso e nome do projeto, e ordenação.
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: size
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: sort_by
+          in: query
+          description: Campo para ordenação (id, createdAt, resourceName, projectName)
+          schema: { type: string }
+        - name: sort_order
+          in: query
+          schema: { type: string, enum: [ASC, DESC], default: ASC }
+        - name: resource_name
+          in: query
+          description: Filtro por nome do recurso
+          schema: { type: string }
+        - name: project_name
+          in: query
+          description: Filtro por nome do projeto
+          schema: { type: string }
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Página de alocações
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedAllocations'
+        '400':
+          $ref: '#/components/responses/BadRequestValidation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags: [Alocações]
+      summary: Criar alocação
+      description: Vincula um recurso a um projeto. O recurso não pode estar alocado em outro projeto com status diferente de COMPLETED.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAllocationRequest'
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Alocação criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Allocation'
+        '400':
+          description: Dados inválidos ou recurso já alocado em outro projeto
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ApiError'
+                  - $ref: '#/components/schemas/ApiValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/allocations/{id}:
+    get:
+      tags: [Alocações]
+      summary: Buscar alocação por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Alocação encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Allocation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags: [Alocações]
+      summary: Atualizar alocação
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAllocationRequest'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Alocação atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Allocation'
+        '400':
+          description: Dados inválidos ou recurso já alocado em outro projeto
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ApiError'
+                  - $ref: '#/components/schemas/ApiValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags: [Alocações]
+      summary: Excluir alocação
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Excluído com sucesso
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/users/me:
+    get:
+      tags: [Usuários]
+      summary: Usuário autenticado
+      description: Retorna os dados do usuário logado (a partir do token JWT).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dados do usuário
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/users:
+    get:
+      tags: [Usuários]
+      summary: Listar usuários
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: size
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Página de usuários
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedUsers'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags: [Usuários]
+      summary: Criar usuário
+      description: Requer usuário autenticado com permissão de administrador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Usuário criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Dados inválidos ou usuário já existente
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ApiError'
+                  - $ref: '#/components/schemas/ApiValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/users/{id}:
+    get:
+      tags: [Usuários]
+      summary: Buscar usuário por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Usuário encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags: [Usuários]
+      summary: Atualizar usuário
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Usuário atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ApiError'
+                  - $ref: '#/components/schemas/ApiValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags: [Usuários]
+      summary: Excluir usuário
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Excluído com sucesso
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token obtido em POST /api/auth
+
+  responses:
+    BadRequest:
+      description: Requisição inválida (dados incorretos ou regra de negócio)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    BadRequestValidation:
+      description: Erro de validação dos campos da requisição
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiValidationError'
+    Unauthorized:
+      description: Não autenticado ou token inválido/expirado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Forbidden:
+      description: Sem permissão para a operação
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    InternalServerError:
+      description: Erro interno do servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+  schemas:
+    ApiError:
+      type: object
+      description: Resposta de erro padrão da API
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Data e hora do erro
+        error:
+          type: string
+          description: Código do erro (ex. NOT_FOUND, VALIDATION_ERROR, UNAUTHORIZED)
+        message:
+          type: string
+          description: Mensagem legível do erro
+
+    ApiValidationError:
+      type: object
+      description: Resposta de erro de validação (400)
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            errors:
+              type: array
+              description: Lista de erros por campo
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    description: Nome do campo com erro
+                  message:
+                    type: string
+                    description: Mensagem de validação
+
+    AuthRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email, description: E-mail do usuário }
+        password: { type: string, format: password, description: Senha }
+
+    AuthResponse:
+      type: object
+      description: Resposta da autenticação (snake_case na API)
+      properties:
+        token: { type: string, description: Token JWT }
+        email: { type: string }
+        user_id: { type: integer, format: int64 }
+        role: { type: string, enum: [ADMIN, USER], description: Papel do usuário }
+
+    DashboardSummary:
+      type: object
+      description: Resumo do dashboard
+      properties:
+        projects:
+          type: object
+          properties:
+            total: { type: integer, format: int64 }
+            by_status:
+              type: object
+              properties:
+                planning: { type: integer, format: int64 }
+                in_progress: { type: integer, format: int64 }
+                on_hold: { type: integer, format: int64 }
+                completed: { type: integer, format: int64 }
+        resources:
+          type: object
+          properties:
+            total: { type: integer, format: int64 }
+            allocated: { type: integer, format: int64 }
+            unallocated: { type: integer, format: int64 }
+        allocations:
+          type: object
+          properties:
+            total: { type: integer, format: int64 }
+
+    Project:
+      type: object
+      description: Projeto (snake_case na API)
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        description: { type: string }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+        status: { type: string, enum: [PLANNING, IN_PROGRESS, ON_HOLD, COMPLETED] }
+        created_at: { type: string, format: date-time }
+
+    CreateProjectRequest:
+      type: object
+      required: [name, start_date, end_date]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+        description: { type: string, maxLength: 2000 }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+        status: { type: string, enum: [PLANNING, IN_PROGRESS, ON_HOLD, COMPLETED] }
+
+    UpdateProjectRequest:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+        description: { type: string, maxLength: 2000 }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+        status: { type: string, enum: [PLANNING, IN_PROGRESS, ON_HOLD, COMPLETED] }
+
+    PagedProjects:
+      type: object
+      properties:
+        content: { type: array, items: { $ref: '#/components/schemas/Project' } }
+        total_elements: { type: integer, format: int64 }
+        total_pages: { type: integer }
+        number: { type: integer }
+        size: { type: integer }
+
+    Resource:
+      type: object
+      description: Recurso (pessoa) - snake_case na API
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        email: { type: string }
+        skills: { type: string }
+        created_at: { type: string, format: date-time }
+
+    CreateResourceRequest:
+      type: object
+      required: [name, email]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+        email: { type: string, format: email, maxLength: 255 }
+        skills: { type: string, maxLength: 100 }
+
+    UpdateResourceRequest:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+        email: { type: string, format: email, maxLength: 255 }
+        skills: { type: string, maxLength: 100 }
+
+    PagedResources:
+      type: object
+      properties:
+        content: { type: array, items: { $ref: '#/components/schemas/Resource' } }
+        total_elements: { type: integer, format: int64 }
+        total_pages: { type: integer }
+        number: { type: integer }
+        size: { type: integer }
+
+    Allocation:
+      type: object
+      description: Alocação (recurso em projeto) - snake_case na API
+      properties:
+        id: { type: integer, format: int64 }
+        project: { $ref: '#/components/schemas/Project' }
+        resource: { $ref: '#/components/schemas/Resource' }
+        created_at: { type: string, format: date-time }
+
+    CreateAllocationRequest:
+      type: object
+      required: [project_id, resource_id]
+      properties:
+        project_id: { type: integer, format: int64 }
+        resource_id: { type: integer, format: int64 }
+
+    UpdateAllocationRequest:
+      type: object
+      properties:
+        project_id: { type: integer, format: int64 }
+        resource_id: { type: integer, format: int64 }
+
+    PagedAllocations:
+      type: object
+      properties:
+        content: { type: array, items: { $ref: '#/components/schemas/Allocation' } }
+        total_elements: { type: integer, format: int64 }
+        total_pages: { type: integer }
+        number: { type: integer }
+        size: { type: integer }
+
+    User:
+      type: object
+      description: Usuário do sistema - snake_case na API
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        email: { type: string }
+        role: { type: string, enum: [ADMIN, USER] }
+        created_at: { type: string, format: date-time }
+
+    CreateUserRequest:
+      type: object
+      required: [name, email, password, role]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+        role: { type: string, enum: [ADMIN, USER] }
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [ADMIN, USER] }
+
+    PagedUsers:
+      type: object
+      properties:
+        content: { type: array, items: { $ref: '#/components/schemas/User' } }
+        total_elements: { type: integer, format: int64 }
+        total_pages: { type: integer }
+        number: { type: integer }
+        size: { type: integer }

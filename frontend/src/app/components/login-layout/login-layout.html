@@ -1,0 +1,55 @@
+<main class="login-page">
+  <div class="login-card">
+    <h1 class="login-title">Entrar</h1>
+    <p class="login-subtitle">Use seu e-mail e senha para acessar o sistema.</p>
+
+    @if (errorMessage()) {
+      <div class="error-box" role="alert">
+        {{ errorMessage() }}
+        @if (validationErrors().length) {
+          <ul class="error-list">
+            @for (e of validationErrors(); track e.field) {
+              <li>{{ e.field }}: {{ e.message }}</li>
+            }
+          </ul>
+        }
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="email">E-mail</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="seu@email.com"
+          autocomplete="email"
+          [class.invalid]="form.get('email')?.invalid && form.get('email')?.touched"
+        />
+        @if (form.get('email')?.invalid && form.get('email')?.touched) {
+          <div class="field-error">Informe um e-mail válido.</div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="password">Senha</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          [class.invalid]="form.get('password')?.invalid && form.get('password')?.touched"
+        />
+        @if (form.get('password')?.invalid && form.get('password')?.touched) {
+          <div class="field-error">A senha é obrigatória.</div>
+        }
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="loading()">
+        {{ loading() ? 'Entrando…' : 'Entrar' }}
+      </button>
+    </form>
+  </div>
+</main>
