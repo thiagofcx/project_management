@@ -1,26 +1,43 @@
+version: "3.8"
+
 services:
-  mysql:
+  db:
     image: mysql:8.0
-    container_name: project-management-mysql
+    container_name: project_management_db
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: project_management
       MYSQL_USER: dev_user
       MYSQL_PASSWORD: dev_pass
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root_pass
     ports:
       - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
     command: >
+      mysqld
       --default-authentication-plugin=mysql_native_password
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot_pass"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_pass"]
       interval: 5s
-      timeout: 3s
-      retries: 20
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  api:
+    build: .
+    image: projectmanagement-api:latest
+    container_name: project_management_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
 
 volumes:
-  mysql_data:
+  db_data:
