@@ -7,7 +7,7 @@ import {
   OnDestroy,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Chart } from 'chart.js/auto';
 import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
@@ -15,7 +15,7 @@ import type { DashboardSummary } from '../../models/dashboard.model';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink],
+  imports: [RouterLink, RouterLinkActive],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })

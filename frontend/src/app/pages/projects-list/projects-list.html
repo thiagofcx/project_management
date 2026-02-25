@@ -1,0 +1,124 @@
+<div class="list-page">
+  <header class="list-header">
+    <h1>Projetos</h1>
+    <nav class="nav-menu">
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
+      <a routerLink="/projetos" routerLinkActive="active">Projetos</a>
+      <a routerLink="/recursos" routerLinkActive="active">Recursos</a>
+    </nav>
+    <div class="user-bar">
+      <span class="user-email">{{ email }}</span>
+      <a routerLink="/login" (click)="logout()" class="btn-logout">Sair</a>
+    </div>
+  </header>
+
+  <section class="toolbar">
+    <a routerLink="/projetos/novo" class="btn-cadastrar">Cadastrar projeto</a>
+  </section>
+
+  <section class="filters">
+    <div class="filter-row">
+      <label>
+        Nome
+        <input
+          type="text"
+          [value]="nameFilter()"
+          (input)="onNameFilterInput($any($event.target).value)"
+          placeholder="Filtrar por nome"
+        />
+      </label>
+      <label>
+        Status
+        <select
+          [value]="statusFilter()"
+          (change)="onStatusFilterChange($any($event.target).value)"
+        >
+          @for (opt of statusOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Ordenar por
+        <select
+          [value]="sortBy()"
+          (change)="onSortByChange($any($event.target).value)"
+        >
+          @for (opt of sortOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Ordem
+        <select
+          [value]="sortOrder()"
+          (change)="onSortOrderChange($any($event.target).value)"
+        >
+          <option value="ASC">Ascendente</option>
+          <option value="DESC">Descendente</option>
+        </select>
+      </label>
+      <button type="button" class="btn-apply" (click)="applyFilters()">Aplicar</button>
+    </div>
+  </section>
+
+  @if (loading()) {
+    <p class="loading">Carregando projetos…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else {
+    <section class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Descrição</th>
+            <th>Início</th>
+            <th>Fim</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of content(); track p.id) {
+            <tr>
+              <td>{{ p.id }}</td>
+              <td>{{ p.name }}</td>
+              <td>{{ p.description || '—' }}</td>
+              <td>{{ p.start_date }}</td>
+              <td>{{ p.end_date }}</td>
+              <td>{{ statusLabel(p.status) }}</td>
+              <td>
+                <a [routerLink]="['/projetos', p.id, 'editar']" class="btn-editar">Editar</a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+
+    @if (totalElements() === 0) {
+      <p class="empty">Nenhum projeto encontrado.</p>
+    } @else {
+      <section class="pagination">
+        <span class="pagination-info">
+          Página {{ currentPage() + 1 }} de {{ totalPages() }} ({{ totalElements() }} itens)
+        </span>
+        <div class="pagination-btns">
+          <button type="button" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 0">
+            Anterior
+          </button>
+          <button
+            type="button"
+            (click)="goToPage(currentPage() + 1)"
+            [disabled]="currentPage() >= totalPages() - 1"
+          >
+            Próxima
+          </button>
+        </div>
+      </section>
+    }
+  }
+</div>

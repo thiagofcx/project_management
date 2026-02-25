@@ -1,0 +1,68 @@
+<div class="form-page">
+  <header class="form-header">
+    <h1>{{ isEdit() ? 'Editar recurso' : 'Novo recurso' }}</h1>
+    <nav class="nav-menu">
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
+      <a routerLink="/projetos" routerLinkActive="active">Projetos</a>
+      <a routerLink="/recursos" routerLinkActive="active">Recursos</a>
+    </nav>
+    <div class="user-bar">
+      <span class="user-email">{{ email }}</span>
+      <a routerLink="/login" (click)="logout()" class="btn-logout">Sair</a>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="loading">Carregando…</p>
+  } @else {
+    <form class="form-card" (ngSubmit)="onSubmit()">
+      @if (error()) {
+        <p class="form-error">{{ error() }}</p>
+      }
+      <div class="form-group">
+        <label for="name">Nome *</label>
+        <input
+          id="name"
+          type="text"
+          [ngModel]="name()"
+          (ngModelChange)="name.set($event)"
+          name="name"
+          required
+          maxlength="255"
+          placeholder="Nome do recurso"
+        />
+      </div>
+      <div class="form-group">
+        <label for="email">E-mail *</label>
+        <input
+          id="email"
+          type="email"
+          [ngModel]="emailField()"
+          (ngModelChange)="emailField.set($event)"
+          name="email"
+          required
+          maxlength="255"
+          placeholder="email@exemplo.com"
+        />
+      </div>
+      <div class="form-group">
+        <label for="skills">Skills</label>
+        <input
+          id="skills"
+          type="text"
+          [ngModel]="skills()"
+          (ngModelChange)="skills.set($event)"
+          name="skills"
+          maxlength="100"
+          placeholder="Ex: Java, Angular (opcional)"
+        />
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" routerLink="/recursos">Cancelar</button>
+        <button type="submit" class="btn-submit" [disabled]="saving()">
+          {{ saving() ? 'Salvando…' : (isEdit() ? 'Salvar' : 'Cadastrar') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

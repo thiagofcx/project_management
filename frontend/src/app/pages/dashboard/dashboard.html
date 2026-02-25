@@ -1,6 +1,11 @@
 <div class="dashboard">
   <header class="dashboard-header">
     <h1>Dashboard</h1>
+    <nav class="nav-menu">
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
+      <a routerLink="/projetos" routerLinkActive="active">Projetos</a>
+      <a routerLink="/recursos" routerLinkActive="active">Recursos</a>
+    </nav>
     <div class="user-bar">
       <span class="user-email">{{ email }}</span>
       <a routerLink="/login" (click)="logout()" class="btn-logout">Sair</a>
