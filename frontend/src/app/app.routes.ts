@@ -6,6 +6,7 @@ import { ProjectsList } from './pages/projects-list/projects-list';
 import { ResourcesList } from './pages/resources-list/resources-list';
 import { ProjectForm } from './pages/project-form/project-form';
 import { ResourceForm } from './pages/resource-form/resource-form';
+import { ProjectAllocations } from './pages/project-allocations/project-allocations';
 
 export const routes: Routes = [
   { path: 'login', component: LoginLayout },
@@ -13,6 +14,7 @@ export const routes: Routes = [
   { path: 'projetos', component: ProjectsList, canActivate: [authGuard] },
   { path: 'projetos/novo', component: ProjectForm, canActivate: [authGuard] },
   { path: 'projetos/:id/editar', component: ProjectForm, canActivate: [authGuard] },
+  { path: 'projetos/:id/alocacoes', component: ProjectAllocations, canActivate: [authGuard] },
   { path: 'recursos', component: ResourcesList, canActivate: [authGuard] },
   { path: 'recursos/novo', component: ResourceForm, canActivate: [authGuard] },
   { path: 'recursos/:id/editar', component: ResourceForm, canActivate: [authGuard] },

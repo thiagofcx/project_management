@@ -4,8 +4,12 @@ info:
   description: |
     API REST para gerenciamento de projetos, recursos (pessoas), alocações e usuários.
     As respostas utilizam nomenclatura em **snake_case**.
-    Endpoints protegidos exigem o header `Authorization: Bearer <token>` (exceto autenticação).
+    **Autenticação:** Todos os endpoints, exceto `POST /api/auth`, exigem o token JWT no header
+    `Authorization: Bearer <token>`. O token é obtido na resposta do login (`POST /api/auth`).
   version: 1.0.0
+
+security:
+  - bearerAuth: []
 
 servers:
   - url: http://localhost:8080
@@ -30,7 +34,8 @@ paths:
     post:
       tags: [Autenticação]
       summary: Autenticar
-      description: Retorna token JWT para uso nos demais endpoints.
+      description: Retorna token JWT para uso nos demais endpoints. Este endpoint **não** exige token.
+      security: []
       requestBody:
         required: true
         content:
@@ -53,7 +58,9 @@ paths:
     get:
       tags: [Dashboard]
       summary: Resumo do dashboard
-      description: Retorna totais de projetos, recursos, alocações e contagens por status.
+      description: |
+        Retorna totais de projetos, recursos, alocações e contagens por status.
+        **Requer** o token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`).
       security:
         - bearerAuth: []
       responses:
@@ -72,7 +79,9 @@ paths:
     get:
       tags: [Projetos]
       summary: Listar projetos
-      description: Lista paginada com filtros opcionais por nome e status, e ordenação.
+      description: |
+        Lista paginada com filtros opcionais por nome e status, e ordenação.
+        **Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`).
       parameters:
         - name: page
           in: query
@@ -113,6 +122,7 @@ paths:
     post:
       tags: [Projetos]
       summary: Criar projeto
+      description: '**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`).'
       requestBody:
         required: true
         content:
@@ -145,6 +155,7 @@ paths:
     get:
       tags: [Projetos]
       summary: Buscar projeto por ID
+      description: "**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`)."
       parameters:
         - name: id
           in: path
@@ -168,6 +179,7 @@ paths:
     put:
       tags: [Projetos]
       summary: Atualizar projeto
+      description: "**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`)."
       parameters:
         - name: id
           in: path
@@ -204,6 +216,7 @@ paths:
     delete:
       tags: [Projetos]
       summary: Excluir projeto
+      description: "**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`)."
       parameters:
         - name: id
           in: path
@@ -225,7 +238,9 @@ paths:
     get:
       tags: [Recursos]
       summary: Listar recursos
-      description: Lista paginada com filtros por nome e skills, e ordenação.
+      description: |
+        Lista paginada com filtros por nome e skills, e ordenação.
+        **Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`).
       parameters:
         - name: page
           in: query
@@ -266,6 +281,7 @@ paths:
     post:
       tags: [Recursos]
       summary: Criar recurso
+      description: "**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`)."
       requestBody:
         required: true
         content:
@@ -298,6 +314,7 @@ paths:
     get:
       tags: [Recursos]
       summary: Buscar recurso por ID
+      description: "**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`)."
       parameters:
         - name: id
           in: path
@@ -321,6 +338,7 @@ paths:
     put:
       tags: [Recursos]
       summary: Atualizar recurso
+      description: "**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`)."
       parameters:
         - name: id
           in: path
@@ -357,6 +375,7 @@ paths:
     delete:
       tags: [Recursos]
       summary: Excluir recurso
+      description: "**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`)."
       parameters:
         - name: id
           in: path
@@ -378,7 +397,9 @@ paths:
     get:
       tags: [Alocações]
       summary: Listar alocações
-      description: Lista paginada com filtros por nome do recurso e nome do projeto, e ordenação.
+      description: |
+        Lista paginada com filtros por nome do recurso e nome do projeto, e ordenação.
+        **Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`).
       parameters:
         - name: page
           in: query
@@ -419,7 +440,9 @@ paths:
     post:
       tags: [Alocações]
       summary: Criar alocação
-      description: Vincula um recurso a um projeto. O recurso não pode estar alocado em outro projeto com status diferente de COMPLETED.
+      description: |
+        Vincula um recurso a um projeto. O recurso não pode estar alocado em outro projeto com status diferente de COMPLETED.
+        **Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`).
       requestBody:
         required: true
         content:
@@ -454,6 +477,7 @@ paths:
     get:
       tags: [Alocações]
       summary: Buscar alocação por ID
+      description: "**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`)."
       parameters:
         - name: id
           in: path
@@ -477,6 +501,7 @@ paths:
     put:
       tags: [Alocações]
       summary: Atualizar alocação
+      description: "**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`)."
       parameters:
         - name: id
           in: path
@@ -513,6 +538,7 @@ paths:
     delete:
       tags: [Alocações]
       summary: Excluir alocação
+      description: "**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`)."
       parameters:
         - name: id
           in: path
@@ -534,7 +560,9 @@ paths:
     get:
       tags: [Usuários]
       summary: Usuário autenticado
-      description: Retorna os dados do usuário logado (a partir do token JWT).
+      description: |
+        Retorna os dados do usuário logado (a partir do token JWT).
+        **Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`).
       security:
         - bearerAuth: []
       responses:
@@ -553,6 +581,7 @@ paths:
     get:
       tags: [Usuários]
       summary: Listar usuários
+      description: "**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`)."
       parameters:
         - name: page
           in: query
@@ -576,7 +605,9 @@ paths:
     post:
       tags: [Usuários]
       summary: Criar usuário
-      description: Requer usuário autenticado com permissão de administrador.
+      description: |
+        Requer usuário autenticado com permissão de administrador.
+        **Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`).
       requestBody:
         required: true
         content:
@@ -611,6 +642,7 @@ paths:
     get:
       tags: [Usuários]
       summary: Buscar usuário por ID
+      description: "**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`)."
       parameters:
         - name: id
           in: path
@@ -634,6 +666,7 @@ paths:
     put:
       tags: [Usuários]
       summary: Atualizar usuário
+      description: "**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`)."
       parameters:
         - name: id
           in: path
@@ -672,6 +705,7 @@ paths:
     delete:
       tags: [Usuários]
       summary: Excluir usuário
+      description: "**Requer** token JWT no header `Authorization: Bearer <token>` (obtido em `POST /api/auth`)."
       parameters:
         - name: id
           in: path
@@ -697,7 +731,9 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Token obtido em POST /api/auth
+      description: |
+        Token JWT retornado na resposta de `POST /api/auth`. Deve ser enviado em **todos** os demais
+        endpoints no header `Authorization: Bearer <token>`.
 
   responses:
     BadRequest:

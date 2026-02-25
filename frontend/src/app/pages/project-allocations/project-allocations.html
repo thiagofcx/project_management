@@ -1,0 +1,96 @@
+<div class="alloc-page">
+  <header class="alloc-header">
+    <h1>Desenvolvedores do projeto</h1>
+    <nav class="nav-menu">
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
+      <a routerLink="/projetos" routerLinkActive="active">Projetos</a>
+      <a routerLink="/recursos" routerLinkActive="active">Recursos</a>
+    </nav>
+    <div class="user-bar">
+      <span class="user-email">{{ email }}</span>
+      <a routerLink="/login" (click)="logout()" class="btn-logout">Sair</a>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="loading">Carregando…</p>
+  } @else if (error() && !project()) {
+    <p class="error">{{ error() }}</p>
+    <a routerLink="/projetos" class="btn-back">Voltar à lista de projetos</a>
+  } @else if (project(); as proj) {
+    <section class="project-info">
+      <h2>{{ proj.name }}</h2>
+      <a [routerLink]="['/projetos', proj.id, 'editar']" class="link-editar">Editar projeto</a>
+    </section>
+
+    @if (error()) {
+      <p class="form-error">{{ error() }}</p>
+    }
+
+    <section class="vincular-section">
+      <h3>Vincular desenvolvedor</h3>
+      <div class="vincular-form">
+        <select
+          [value]="selectedResourceId() ?? ''"
+          (change)="selectedResourceId.set($any($event.target).value ? +$any($event.target).value : null)"
+        >
+          <option value="">Selecione um recurso</option>
+          @for (r of availableResources(); track r.id) {
+            <option [value]="r.id">{{ r.name }} ({{ r.email }})</option>
+          }
+        </select>
+        <button
+          type="button"
+          class="btn-vincular"
+          (click)="vincular()"
+          [disabled]="saving() || !selectedResourceId()"
+        >
+          {{ saving() ? 'Vinculando…' : 'Vincular' }}
+        </button>
+      </div>
+      @if (availableResources().length === 0 && !loadingResources()) {
+        <p class="hint">Todos os recursos já estão vinculados a este projeto ou a outros projetos ativos.</p>
+      }
+    </section>
+
+    <section class="list-section">
+      <h3>Desenvolvedores vinculados</h3>
+      @if (allocations().length === 0) {
+        <p class="empty">Nenhum desenvolvedor vinculado a este projeto.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Skills</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (a of allocations(); track a.id) {
+                <tr>
+                  <td>{{ a.resource.name }}</td>
+                  <td>{{ a.resource.email }}</td>
+                  <td>{{ a.resource.skills || '—' }}</td>
+                  <td>
+                    <button
+                      type="button"
+                      class="btn-desvincular"
+                      (click)="desvincular(a)"
+                    >
+                      Desvincular
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <a routerLink="/projetos" class="btn-back">Voltar à lista de projetos</a>
+  }
+</div>

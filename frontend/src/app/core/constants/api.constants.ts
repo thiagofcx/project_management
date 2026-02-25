@@ -6,4 +6,5 @@ export const API_ENDPOINTS = {
   dashboardSummary: `${API_BASE_URL}/api/dashboard/summary`,
   projects: `${API_BASE_URL}/api/projects`,
   resources: `${API_BASE_URL}/api/resources`,
+  allocations: `${API_BASE_URL}/api/allocations`,
 } as const;

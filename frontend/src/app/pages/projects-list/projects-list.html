@@ -90,8 +90,9 @@
               <td>{{ p.start_date }}</td>
               <td>{{ p.end_date }}</td>
               <td>{{ statusLabel(p.status) }}</td>
-              <td>
+              <td class="actions-cell">
                 <a [routerLink]="['/projetos', p.id, 'editar']" class="btn-editar">Editar</a>
+                <a [routerLink]="['/projetos', p.id, 'alocacoes']" class="btn-alocacoes">Desenvolvedores</a>
               </td>
             </tr>
           }
