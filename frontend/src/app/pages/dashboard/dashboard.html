@@ -1,0 +1,43 @@
+<div class="dashboard">
+  <header class="dashboard-header">
+    <h1>Dashboard</h1>
+    <div class="user-bar">
+      <span class="user-email">{{ email }}</span>
+      <a routerLink="/login" (click)="logout()" class="btn-logout">Sair</a>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <section class="dashboard-loading">
+      <p>Carregando resumo…</p>
+    </section>
+  } @else if (error()) {
+    <section class="dashboard-error">
+      <p>{{ error() }}</p>
+    </section>
+  } @else if (summary(); as data) {
+    <section class="dashboard-cards">
+      <div class="card">
+        <span class="card-value">{{ data.projects.total }}</span>
+        <span class="card-label">Projetos</span>
+      </div>
+      <div class="card">
+        <span class="card-value">{{ data.resources.total }}</span>
+        <span class="card-label">Recursos</span>
+      </div>
+      <div class="card">
+        <span class="card-value">{{ data.allocations.total }}</span>
+        <span class="card-label">Alocações</span>
+      </div>
+    </section>
+
+    <section class="dashboard-charts">
+      <div class="chart-container">
+        <canvas #chartProjects></canvas>
+      </div>
+      <div class="chart-container">
+        <canvas #chartResources></canvas>
+      </div>
+    </section>
+  }
+</div>
